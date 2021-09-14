@@ -1,0 +1,42 @@
+version: "3.5"
+
+services:
+  lumen:
+    container_name: cs-test
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - .:/var/www/html
+      - /var/www/html/vendor/
+    build: .
+    command: php -S lumen:8000 -t public
+    restart: always
+    depends_on:
+      - mysqldb
+  myadmin:
+    image: phpmyadmin/phpmyadmin:4.9
+    container_name: cs-phpmyadmin
+    ports:
+      - 8081:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=${DB_CONNECTION}
+    restart: always
+    depends_on:
+      - mysqldb
+  mysqldb:
+    image: mysql:5.7
+    container_name: cs-mysql
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    ports:
+      - 3306:3306
+    volumes:
+      - /var/lib/mysql
